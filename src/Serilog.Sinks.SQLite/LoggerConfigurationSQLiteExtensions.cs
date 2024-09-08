@@ -17,6 +17,7 @@ using Serilog.Debugging;
 namespace Serilog
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using Serilog.Configuration;
     using Serilog.Core;
@@ -59,7 +60,8 @@ namespace Serilog
             LoggingLevelSwitch levelSwitch = null,
             uint batchSize = 100,
             uint maxDatabaseSize = 10,
-            bool rollOver = true)
+            bool rollOver = true,
+            List<string> pragmas = null)
         {
             if (loggerConfiguration == null) {
                 SelfLog.WriteLine("Logger configuration is null");
@@ -96,7 +98,8 @@ namespace Serilog
                         retentionCheckInterval,
                         batchSize,
                         maxDatabaseSize,
-                        rollOver),
+                        rollOver,
+                        pragmas),
                     restrictedToMinimumLevel,
                     levelSwitch);
             }

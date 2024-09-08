@@ -36,6 +36,7 @@ namespace Serilog.Sinks.SQLite
         private readonly uint _maxDatabaseSize;
         private readonly bool _rollOver;
         private readonly string _tableName;
+        private readonly List<string> _pragmas = new List<string>();
         private readonly TimeSpan? _retentionPeriod;
         private readonly Timer _retentionTimer;
         private const string TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fff";
@@ -54,7 +55,8 @@ namespace Serilog.Sinks.SQLite
             TimeSpan? retentionCheckInterval,
             uint batchSize = 100,
             uint maxDatabaseSize = 10,
-            bool rollOver = true) : base(batchSize: (int)batchSize, maxBufferSize: 100_000)
+            bool rollOver = true,
+            List<string> pragmas = null) : base(batchSize: (int)batchSize, maxBufferSize: 100_000)
         {
             _databasePath = sqlLiteDbPath;
             _tableName = tableName;
@@ -66,6 +68,11 @@ namespace Serilog.Sinks.SQLite
             if (maxDatabaseSize > MaxSupportedDatabaseSize)
             {
                 throw new SQLiteException($"Database size greater than {MaxSupportedDatabaseSize} MB is not supported");
+            }
+
+            if (_pragmas != null)
+            {
+                _pragmas = pragmas;
             }
 
             InitializeDatabase();
@@ -121,6 +128,16 @@ namespace Serilog.Sinks.SQLite
                 PageSize = (int)MaxSupportedPageSize,
                 MaxPageCount = (int)(_maxDatabaseSize * BytesPerMb / MaxSupportedPageSize)
             }.ConnectionString;
+
+            if (_pragmas != null & _pragmas.Count > 0)
+            {
+                sqlConString += ";";
+
+                foreach (string pragma in _pragmas)
+                {
+                    sqlConString += pragma + ";";
+                }
+            }
 
             var sqLiteConnection = new SQLiteConnection(sqlConString);
             sqLiteConnection.Open();
